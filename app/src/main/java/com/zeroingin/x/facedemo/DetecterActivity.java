@@ -178,6 +178,7 @@ public class DetecterActivity extends Activity implements OnCameraListener, View
 		mSurfaceView.setOnCameraListener(this);
 		mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, false, 90);
 		mSurfaceView.debug_print_fps(true, false);
+		mSurfaceView.getHolder().setKeepScreenOn(true);	//屏幕常亮
 
 		//snap
 		mTextView = (TextView) findViewById(R.id.textView);
