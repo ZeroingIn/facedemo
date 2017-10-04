@@ -40,7 +40,8 @@ repositories {
         compile files('libs/facerecognition.jar')
         compile files('libs/facetracking.jar')
 //    compile files('libs/android-extend.jar')  //原官方demo采用方式
-        compile project(path: ':android-extend', configuration: 'release')    //现官方demo方式
+//        compile project(path: ':android-extend', configuration: 'release')    //现官方demo方式
+        compile(name:'android-extend-release', ext:'aar')   //简化调用方式
     }
 }
 

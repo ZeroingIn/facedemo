@@ -25,8 +25,7 @@ git submodule update
 ```
 
 
-
-###更多说明请查看[官方demo](https://github.com/asdfqwrasdf/ArcFaceDemo/blob/master/README.md)
+### 更多说明请查看[官方demo](https://github.com/asdfqwrasdf/ArcFaceDemo/blob/master/README.md)
 
 
 
