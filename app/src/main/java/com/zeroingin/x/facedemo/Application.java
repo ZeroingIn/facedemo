@@ -1,5 +1,6 @@
 package com.zeroingin.x.facedemo;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -12,11 +13,13 @@ import android.util.Log;
 
 public class Application extends android.app.Application {
 	private final String TAG = this.getClass().toString();
+	public static Context mContext;		//一定要将其设为静态 不然别的类无法访问
 	FaceDB mFaceDB;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		mContext = getApplicationContext();
 		mFaceDB = new FaceDB(this.getExternalCacheDir().getPath());
 	}
 

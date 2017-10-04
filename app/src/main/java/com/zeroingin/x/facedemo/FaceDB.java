@@ -143,43 +143,55 @@ public class FaceDB {
 		return false;
 	}
 
-	public	void addFace(String name, AFR_FSDKFace face) {
+    // TODO: 2017/10/4 待完善注册时先对比人脸库中是否含有同一个人 而非使用名字将特征放在一起
+    public	void addFace(String name, AFR_FSDKFace face) {
 		try {
 			//check if already registered.
-			boolean add = true;
-			for (FaceRegist frface : mRegister) {
-				if (frface.mName.equals(name)) {
-					frface.mFaceList.add(face);
-					add = false;
-					break;
+            boolean add = true;
+            boolean isSame = false;
+            for (FaceRegist frface : mRegister) {
+                //判断数据库中是否存在该人名字 有则将脸谱加入list中
+                if (frface.mName.equals(name)) {
+                    for (AFR_FSDKFace afr_fsdkFace : frface.mFaceList) {
+                        if (new String(face.getFeatureData()).equals(new String(afr_fsdkFace.getFeatureData()))) {  //byte[]转换为string后对比
+                            isSame = true;  //传入的与list中已存在的任意一个特征相同即为重复
+                        }
+                    }
+                    if (!isSame)  //不重复则添加进list
+                        frface.mFaceList.add(face);
+                    add = false;
+                    break;
 				}
 			}
+
 			if (add) { // not registered.
 				FaceRegist frface = new FaceRegist(name);
 				frface.mFaceList.add(face);
 				mRegister.add(frface);
 			}
 
-			if (!new File(mDBPath + "/face.txt").exists()) {
-				if (!saveInfo()) {
-					Log.e(TAG, "save fail!");
-				}
-			}
+            if (!isSame) {  //重复特征则不保存信息
+                if (!new File(mDBPath + "/face.txt").exists()) {
+                    if (!saveInfo()) {
+                        Log.e(TAG, "save fail!");
+                    }
+                }
 
-			//save name
-			FileOutputStream fs = new FileOutputStream(mDBPath + "/face.txt", true);
-			ExtOutputStream bos = new ExtOutputStream(fs);
-			bos.writeString(name);
-			bos.close();
-			fs.close();
+                //save name
+                FileOutputStream fs = new FileOutputStream(mDBPath + "/face.txt", true);
+                ExtOutputStream bos = new ExtOutputStream(fs);
+                bos.writeString(name);
+                bos.close();
+                fs.close();
 
-			//save feature
-			fs = new FileOutputStream(mDBPath + "/" + name + ".data", true);
-			bos = new ExtOutputStream(fs);
-			bos.writeBytes(face.getFeatureData());
-			bos.close();
-			fs.close();
-		} catch (FileNotFoundException e) {
+                //save feature
+                fs = new FileOutputStream(mDBPath + "/" + name + ".data", true);
+                bos = new ExtOutputStream(fs);
+                bos.writeBytes(face.getFeatureData());
+                bos.close();
+                fs.close();
+            }
+        } catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();

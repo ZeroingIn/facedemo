@@ -69,10 +69,11 @@ public class MainActivity extends Activity implements OnClickListener, AlertDial
 			if (data == null) {
 				return;
 			}
-			Bundle bundle = data.getExtras();
+			Bundle bundle = data.getExtras();   //将捆绑的参数取出
 			String path = bundle.getString("imagePath");
 			Log.i(TAG, "path="+path);
 		} else if (requestCode == REQUEST_CODE_IMAGE_CAMERA && resultCode == RESULT_OK) {
+            //当头型不正时便无法获取到人脸特征
 			String file = getPath(mPath);
 			Bitmap bmp = Application.decodeImage(file);
 			startOilPainting(bmp, file);
@@ -84,6 +85,7 @@ public class MainActivity extends Activity implements OnClickListener, AlertDial
 		// TODO Auto-generated method stub
 		switch (paramView.getId()) {
 			case R.id.button2:
+			    //获取Application里非静态变量
 				if( ((Application)getApplicationContext()).mFaceDB.mRegister.isEmpty() ) {
 					Toast.makeText(this, "没有注册人脸，请先注册！", Toast.LENGTH_SHORT).show();
 				} else {
@@ -98,7 +100,7 @@ public class MainActivity extends Activity implements OnClickListener, AlertDial
 						.setItems(new String[]{"打开图片", "拍摄照片"}, this)
 						.show();
 				break;
-			default:;
+			default:break;
 		}
 	}
 
@@ -133,10 +135,10 @@ public class MainActivity extends Activity implements OnClickListener, AlertDial
 			}
 		}
 		String[] proj = { MediaStore.Images.Media.DATA };
-		Cursor actualimagecursor = managedQuery(uri, proj,null,null,null);
-		int actual_image_column_index = actualimagecursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-		actualimagecursor.moveToFirst();
-		String img_path = actualimagecursor.getString(actual_image_column_index);
+		Cursor actualImageCursor = managedQuery(uri, proj,null,null,null);
+		int actual_image_column_index = actualImageCursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+		actualImageCursor.moveToFirst();
+		String img_path = actualImageCursor.getString(actual_image_column_index);
 		String end = img_path.substring(img_path.length() - 4);
 		if (0 != end.compareToIgnoreCase(".jpg") && 0 != end.compareToIgnoreCase(".png")) {
 			return null;
@@ -184,7 +186,7 @@ public class MainActivity extends Activity implements OnClickListener, AlertDial
 		Intent it = new Intent(MainActivity.this, RegisterActivity.class);
 		Bundle bundle = new Bundle();
 		bundle.putString("imagePath", file);
-		it.putExtras(bundle);
+		it.putExtras(bundle);   //使用Bundle更利于多重传递 快速取出参数且可以传递对象 http://blog.csdn.net/garretly/article/details/6207950
 		startActivityForResult(it, REQUEST_CODE_OP);
 	}
 
@@ -192,23 +194,35 @@ public class MainActivity extends Activity implements OnClickListener, AlertDial
 	public void onClick(DialogInterface dialog, int which) {
 		switch (which){
 			case 1:
-				Intent getImageByCamera = new Intent(
-						"android.media.action.IMAGE_CAPTURE");
-				ContentValues values = new ContentValues(1);
+			    //添加异常情况处理
+                if (!AppUtils.isHaveCame(MediaStore.ACTION_IMAGE_CAPTURE)) {
+                    Toast.makeText(MainActivity.this, "该手机没有安装相机", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-				values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+                //原代码使用"android.media.action.IMAGE_CAPTURE"
+				Intent getImageByCamera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+				ContentValues values = new ContentValues(1);    //准备一个长度为1的键值对组
+				values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");    //指定内容类型
+                //向存储在SD卡上的图像文件文件ContentProvider的URI插入一个 并返回Uri
 				mPath = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+                //指定拍照存储路径 如果指定了目标uri，data就没有数据，如果没有指定uri，则data就返回有数据
 				getImageByCamera.putExtra(MediaStore.EXTRA_OUTPUT, mPath);
 
 				startActivityForResult(getImageByCamera, REQUEST_CODE_IMAGE_CAMERA);
 				break;
 			case 0:
-				Intent getImageByalbum = new Intent(Intent.ACTION_GET_CONTENT);
-				getImageByalbum.addCategory(Intent.CATEGORY_OPENABLE);
-				getImageByalbum.setType("image/jpeg");
-				startActivityForResult(getImageByalbum, REQUEST_CODE_IMAGE_OP);
+				//隐式意图 选择最匹配的
+				Intent getImageByAlbum = new Intent(Intent.ACTION_GET_CONTENT);
+				//只返回可通过 openFileDescriptor() 以文件流形式表示的“可打开”文件
+				getImageByAlbum.addCategory(Intent.CATEGORY_OPENABLE);
+				//查看类型 String IMAGE_UNSPECIFIED = "image/*";
+				getImageByAlbum.setType("image/jpeg");
+				startActivityForResult(getImageByAlbum, REQUEST_CODE_IMAGE_OP);
 				break;
-			default:;
+			default:break;
 		}
 	}
 }
